@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gastos Familiares</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>💰 Gastos Familiares</h1>
+    <div id="userBar" class="hidden">
+      <span>Hola, <strong id="userName"></strong></span>
+      <button id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="authSection">
+      <div class="card">
+        <h2>Iniciar sesión</h2>
+        <form id="loginForm">
+          <input name="username" placeholder="Usuario" required />
+          <input name="password" type="password" placeholder="Contraseña" required />
+          <button type="submit">Entrar</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Registrarse</h2>
+        <form id="registerForm">
+          <input name="username" placeholder="Usuario" required />
+          <input name="password" type="password" placeholder="Contraseña" required />
+          <button type="submit">Crear cuenta</button>
+        </form>
+      </div>
+      <p id="authMsg" class="msg"></p>
+    </section>
+
+    <section id="appSection" class="hidden">
+      <div class="card">
+        <h2>Agregar gasto</h2>
+        <form id="expenseForm">
+          <input name="description" placeholder="Descripción (ej: Mercado)" required />
+          <input name="amount" type="number" step="0.01" placeholder="Monto (COP)" required />
+          <select name="category">
+            <option>Mercado</option>
+            <option>Servicios</option>
+            <option>Transporte</option>
+            <option>Salud</option>
+            <option>Educación</option>
+            <option>Otros</option>
+          </select>
+          <button type="submit">Guardar</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Mis gastos</h2>
+        <p>Total: <strong id="total">$0</strong></p>
+        <ul id="expensesList"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
