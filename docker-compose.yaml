@@ -4,10 +4,6 @@ services:
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
-    # Internal only - not exposed to host by default.
-    # Uncomment to access from your machine:
-    # ports:
-    #   - "27017:27017"
 
   backend:
     build:
@@ -19,17 +15,20 @@ services:
       JWT_SECRET: ${JWT_SECRET:-secret123}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       PORT: 3001
+    expose:
+      - "3001"
     depends_on:
       - mongo
-    # Backend not exposed directly; reached through nginx proxy.
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "8080:80"
+    # On Coolify the reverse proxy (Traefik) reaches the container on its
+    # internal port. Locally, override with: docker compose -f docker-compose.yaml -f docker-compose.local.yaml up
+    expose:
+      - "80"
     depends_on:
       - backend
 

@@ -57,10 +57,12 @@ Si querés usar tu propia base MongoDB en modo dev, definí la variable de entor
 Para correr la app como se desplegaría en producción (con MongoDB de verdad y nginx sirviendo el frontend), usá Docker Compose:
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.yaml -f docker-compose.local.yaml up --build
 ```
 
 Abrí: http://localhost:8080
+
+> El override `docker-compose.local.yaml` solo expone el puerto `8080` para acceder desde tu máquina. En Coolify no se usa: el reverse proxy se conecta al contenedor por la red interna.
 
 Esto levanta tres servicios:
 
