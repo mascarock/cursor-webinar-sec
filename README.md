@@ -1,14 +1,28 @@
 # Gastos Familiares
 
-App simple para registrar gastos de la familia (en pesos colombianos 🇨🇴).
+App para registrar gastos de la familia (en pesos colombianos 🇨🇴).
 
 > ⚠️ Esta app fue construida para un **webinar de demostración**. Tiene fallas de seguridad **a propósito** y **no debe usarse en producción**.
+
+## Stack
+
+- **Backend:** NestJS + TypeScript + MongoDB
+- **Frontend:** HTML/CSS/JS estático (servido aparte)
+- **DB:** MongoDB (con fallback automático a base en memoria — no requiere instalación)
+
+## Estructura
+
+```
+.
+├── backend/    # API NestJS (puerto 3001)
+└── frontend/   # Sitio estático (puerto 5173)
+```
 
 ## Requisitos
 
 - [Node.js](https://nodejs.org) 18 o superior (incluye `npm`).
 
-No necesitas instalar MongoDB: la app levanta una base de datos en memoria automáticamente.
+No necesitás instalar MongoDB.
 
 ## Instalación
 
@@ -16,25 +30,24 @@ No necesitas instalar MongoDB: la app levanta una base de datos en memoria autom
 npm install
 ```
 
+(Esto instala dependencias del backend y del frontend.)
+
 ## Ejecutar
 
 ```bash
 npm start
 ```
 
-Abrí el navegador en: http://localhost:3000
+Esto levanta backend + frontend en paralelo:
+
+- Frontend: http://localhost:5173
+- API: http://localhost:3001
 
 Funciona igual en **Windows**, **macOS** y **Linux**.
 
-## Uso
-
-1. Creá una cuenta desde el formulario de registro.
-2. Iniciá sesión.
-3. Agregá, listá y eliminá tus gastos.
-
 ## Configuración opcional
 
-Si querés usar tu propia base MongoDB, definí la variable de entorno:
+Si querés usar tu propia base MongoDB, definí la variable de entorno antes de `npm start`:
 
 - macOS / Linux: `MONGODB_URI=mongodb://localhost:27017 npm start`
 - Windows (PowerShell): `$env:MONGODB_URI="mongodb://localhost:27017"; npm start`

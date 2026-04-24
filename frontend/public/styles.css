@@ -1,4 +1,3 @@
-/* ─── Theme (inspired by Cursor Foundation) ─── */
 :root {
   --bg: #0a0a0a;
   --bg-elev: #111;
@@ -11,7 +10,6 @@
   --text-faint: rgba(255, 255, 255, 0.3);
   --text-dim: rgba(255, 255, 255, 0.4);
   --danger: #ef4444;
-  --success: #22c55e;
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;
@@ -30,7 +28,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Header ─── */
 .site-header {
   position: sticky;
   top: 0;
@@ -55,12 +52,10 @@ body {
   gap: 10px;
   font-weight: 500;
   letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--text);
 }
-.brand-cube {
-  width: 18px;
-  height: 18px;
-  color: #fff;
-}
+.brand-cube { width: 18px; height: 18px; color: #fff; }
 .brand-name { font-size: 15px; }
 .brand-sub { color: var(--text-dim); font-weight: 400; margin-left: 2px; }
 
@@ -73,17 +68,13 @@ body {
 }
 #userBar strong { color: var(--text); font-weight: 500; }
 
-/* ─── Layout ─── */
 main {
   max-width: 720px;
   margin: 0 auto;
   padding: 32px 20px 80px;
 }
 
-/* ─── Hero ─── */
-.hero {
-  padding: 24px 0 32px;
-}
+.hero { padding: 24px 0 32px; }
 .hero h1 {
   margin: 0;
   font-size: clamp(1.75rem, 5vw, 2.5rem);
@@ -99,7 +90,6 @@ main {
   max-width: 480px;
 }
 
-/* ─── Card ─── */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -121,7 +111,6 @@ main {
   margin-bottom: 20px;
 }
 
-/* ─── Forms ─── */
 form { display: flex; flex-direction: column; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label {
@@ -148,7 +137,6 @@ input:focus, select:focus, textarea:focus {
 }
 select option { background: var(--bg-elev); color: var(--text); }
 
-/* ─── Buttons ─── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -164,18 +152,8 @@ select option { background: var(--bg-elev); color: var(--text); }
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   text-decoration: none;
 }
-.btn-primary {
-  background: #fff;
-  color: #000;
-}
+.btn-primary { background: #fff; color: #000; }
 .btn-primary:hover { background: rgba(255, 255, 255, 0.9); }
-.btn-ghost {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-}
-.btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }
-.btn-sm { padding: 6px 14px; font-size: 13px; }
 .btn-icon {
   background: transparent;
   border: 1px solid var(--border);
@@ -185,10 +163,10 @@ select option { background: var(--bg-elev); color: var(--text); }
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.15s;
+  font-family: inherit;
 }
 .btn-icon:hover { color: var(--text); border-color: var(--border-strong); }
 
-/* ─── Auth tabs ─── */
 .tabs {
   display: flex;
   gap: 4px;
@@ -211,10 +189,7 @@ select option { background: var(--bg-elev); color: var(--text); }
   transition: all 0.15s;
   font-family: inherit;
 }
-.tab.active {
-  background: #fff;
-  color: #000;
-}
+.tab.active { background: #fff; color: #000; }
 
 .msg {
   min-height: 1.2em;
@@ -223,7 +198,6 @@ select option { background: var(--bg-elev); color: var(--text); }
   color: #f87171;
 }
 
-/* ─── Stats ─── */
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -250,7 +224,6 @@ select option { background: var(--bg-elev); color: var(--text); }
   margin-top: 6px;
 }
 
-/* ─── Expense list ─── */
 .expense-list { list-style: none; padding: 0; margin: 0; }
 .expense-list li {
   display: flex;
@@ -295,6 +268,8 @@ select option { background: var(--bg-elev); color: var(--text); }
   justify-content: center;
   transition: all 0.15s;
   padding: 0;
+  font-size: 16px;
+  line-height: 1;
 }
 .delete-btn:hover {
   color: #f87171;
@@ -309,13 +284,11 @@ select option { background: var(--bg-elev); color: var(--text); }
 
 .hidden { display: none !important; }
 
-/* ─── Mobile-first responsive bumps ─── */
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, 1fr); }
   main { padding: 48px 24px 96px; }
 }
 
-/* ─── Subtle entrance ─── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }

@@ -1,20 +1,16 @@
 {
   "name": "gastos-familiares",
   "version": "1.0.0",
-  "description": "App simple de registro de gastos familiares (demo para webinar)",
-  "main": "server.js",
+  "description": "App de gastos familiares (demo para webinar) - NestJS + frontend",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "install": "npm --prefix backend install && npm --prefix frontend install",
+    "postinstall": "echo \"\\n✓ Listo. Ejecutá: npm start\\n\"",
+    "start": "concurrently -n backend,frontend -c blue,magenta \"npm --prefix backend run start\" \"npm --prefix frontend run start\"",
+    "start:backend": "npm --prefix backend run start",
+    "start:frontend": "npm --prefix frontend run start"
   },
-  "keywords": ["webinar", "demo", "expenses", "gastos"],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.19.2",
-    "mongodb": "^6.8.0",
-    "mongodb-memory-server": "^10.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "cookie-parser": "^1.4.6"
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "serve -l 5173 public"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
