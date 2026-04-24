@@ -2,37 +2,44 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Db, ObjectId } from 'mongodb';
 import { DB_TOKEN } from '../db/db.module';
 
+export interface Expense {
+  _id?: ObjectId;
+  groupId: string;
+  paidBy: string;
+  description: string;
+  amount: number;
+  category: string;
+  splitBetween: string[];
+  date: Date;
+}
+
 @Injectable()
 export class ExpensesService {
   constructor(@Inject(DB_TOKEN) private readonly db: Db) {}
 
-  list(username: string) {
-    return this.db
-      .collection('expenses')
-      .find({ username })
-      .sort({ date: -1 })
-      .toArray();
+  private get col() {
+    return this.db.collection<Expense>('expenses');
   }
 
-  async create(username: string, data: any) {
-    const expense = {
-      username,
+  list(groupId: string) {
+    return this.col.find({ groupId }).sort({ date: -1 }).toArray();
+  }
+
+  async create(groupId: string, data: any): Promise<Expense> {
+    const expense: Expense = {
+      groupId,
+      paidBy: String(data?.paidBy || ''),
       description: data?.description || '',
       amount: Number(data?.amount) || 0,
       category: data?.category || 'Otros',
+      splitBetween: Array.isArray(data?.splitBetween) ? data.splitBetween.map(String) : [],
       date: new Date(),
     };
-    const result = await this.db.collection('expenses').insertOne(expense);
+    const result = await this.col.insertOne(expense);
     return { ...expense, _id: result.insertedId };
   }
 
-  findOne(id: string) {
-    return this.db.collection('expenses').findOne({ _id: new ObjectId(id) });
-  }
-
-  delete(id: string) {
-    return this.db
-      .collection('expenses')
-      .deleteOne({ _id: new ObjectId(id) });
+  delete(expenseId: string) {
+    return this.col.deleteOne({ _id: new ObjectId(expenseId) });
   }
 }

@@ -1,6 +1,6 @@
 # Gastos Familiares
 
-App para registrar gastos de la familia (en pesos colombianos 🇨🇴).
+App estilo **Tricount** para dividir gastos en grupos: registrá lo que pagó cada uno y la app calcula automáticamente quién le debe a quién (con la mínima cantidad de transferencias). Soporta varias monedas (COP, USD, EUR, MXN, ARS, BRL, CLP, PEN).
 
 > ⚠️ Esta app fue construida para un **webinar de demostración**. Tiene fallas de seguridad **a propósito** y **no debe usarse en producción**.
 
