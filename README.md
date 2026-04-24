@@ -1,5 +1,8 @@
 # Gastos Familiares
 
+
+<img width="484" height="692" alt="image" src="https://github.com/user-attachments/assets/d7a8618f-f9b7-4f59-a9ef-ef502f7d5091" />
+
 App estilo **Tricount** para dividir gastos en grupos: registrá lo que pagó cada uno y la app calcula automáticamente quién le debe a quién (con la mínima cantidad de transferencias). Soporta varias monedas (COP, USD, EUR, MXN, ARS, BRL, CLP, PEN).
 
 > ⚠️ Esta app fue construida para un **webinar de demostración**. Tiene fallas de seguridad **a propósito** y **no debe usarse en producción**.
