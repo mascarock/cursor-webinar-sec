@@ -1,0 +1,20 @@
+{
+  "name": "gastos-familiares",
+  "version": "1.0.0",
+  "description": "App simple de registro de gastos familiares (demo para webinar)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["webinar", "demo", "expenses", "gastos"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0",
+    "mongodb-memory-server": "^10.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "cookie-parser": "^1.4.6"
+  }
+}

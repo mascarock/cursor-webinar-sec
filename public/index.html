@@ -2,62 +2,130 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
   <title>Gastos Familiares</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header>
-    <h1>💰 Gastos Familiares</h1>
-    <div id="userBar" class="hidden">
-      <span>Hola, <strong id="userName"></strong></span>
-      <button id="logoutBtn">Cerrar sesión</button>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand">
+        <svg class="brand-cube" viewBox="0 0 466.73 532.09" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M457.43,125.94L244.42,2.96c-6.84-3.95-15.28-3.95-22.12,0L9.3,125.94c-5.75,3.32-9.3,9.46-9.3,16.11v247.99c0,6.65,3.55,12.79,9.3,16.11l213.01,122.98c6.84,3.95,15.28,3.95,22.12,0l213.01-122.98c5.75-3.32,9.3-9.46,9.3-16.11v-247.99c0-6.65-3.55-12.79-9.3-16.11h-.01ZM444.05,151.99l-205.63,356.16c-1.39,2.4-5.06,1.42-5.06-1.36v-233.21c0-4.66-2.49-8.97-6.53-11.31L24.87,145.67c-2.4-1.39-1.42-5.06,1.36-5.06h411.26c5.84,0,9.49,6.33,6.57,11.39h-.01Z"/>
+        </svg>
+        <span class="brand-name">Gastos</span>
+        <span class="brand-sub">Familiares</span>
+      </a>
+      <div id="userBar" class="hidden">
+        <span>Hola, <strong id="userName"></strong></span>
+        <button id="logoutBtn" class="btn-icon">Salir</button>
+      </div>
     </div>
   </header>
 
   <main>
+    <!-- ─── Auth ─── -->
     <section id="authSection">
+      <div class="hero">
+        <h1>Controlá los gastos de tu familia.</h1>
+        <p>Una herramienta simple para registrar, organizar y entender en qué se va la plata cada mes.</p>
+      </div>
+
       <div class="card">
-        <h2>Iniciar sesión</h2>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="login" role="tab">Iniciar sesión</button>
+          <button class="tab" data-tab="register" role="tab">Registrarse</button>
+        </div>
+
         <form id="loginForm">
-          <input name="username" placeholder="Usuario" required />
-          <input name="password" type="password" placeholder="Contraseña" required />
-          <button type="submit">Entrar</button>
+          <div class="field">
+            <label>Usuario</label>
+            <input name="username" placeholder="ej: maria" required autocomplete="username" />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <input name="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
+          </div>
+          <button type="submit" class="btn btn-primary">Entrar →</button>
         </form>
-      </div>
-      <div class="card">
-        <h2>Registrarse</h2>
-        <form id="registerForm">
-          <input name="username" placeholder="Usuario" required />
-          <input name="password" type="password" placeholder="Contraseña" required />
-          <button type="submit">Crear cuenta</button>
+
+        <form id="registerForm" class="hidden">
+          <div class="field">
+            <label>Usuario</label>
+            <input name="username" placeholder="Elegí un nombre de usuario" required autocomplete="username" />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <input name="password" type="password" placeholder="Elegí una contraseña" required autocomplete="new-password" />
+          </div>
+          <button type="submit" class="btn btn-primary">Crear cuenta →</button>
         </form>
+
+        <p id="authMsg" class="msg"></p>
       </div>
-      <p id="authMsg" class="msg"></p>
     </section>
 
+    <!-- ─── App ─── -->
     <section id="appSection" class="hidden">
+      <div class="hero">
+        <h1>Tus gastos.</h1>
+        <p>Resumen del mes y registro reciente.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="totalAmount">$0</div>
+          <div class="stat-label">Total gastado</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">Movimientos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="topCategory">—</div>
+          <div class="stat-label">Categoría top</div>
+        </div>
+      </div>
+
       <div class="card">
-        <h2>Agregar gasto</h2>
+        <h2>Nuevo gasto</h2>
+        <p class="label" style="margin-bottom: 18px; margin-top: 4px;">Agregá un movimiento</p>
         <form id="expenseForm">
-          <input name="description" placeholder="Descripción (ej: Mercado)" required />
-          <input name="amount" type="number" step="0.01" placeholder="Monto (COP)" required />
-          <select name="category">
-            <option>Mercado</option>
-            <option>Servicios</option>
-            <option>Transporte</option>
-            <option>Salud</option>
-            <option>Educación</option>
-            <option>Otros</option>
-          </select>
-          <button type="submit">Guardar</button>
+          <div class="field">
+            <label>Descripción</label>
+            <input name="description" placeholder="ej: Mercado del sábado" required />
+          </div>
+          <div class="field">
+            <label>Monto (COP)</label>
+            <input name="amount" type="number" step="1" min="0" placeholder="0" required inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label>Categoría</label>
+            <select name="category">
+              <option>Mercado</option>
+              <option>Servicios</option>
+              <option>Transporte</option>
+              <option>Salud</option>
+              <option>Educación</option>
+              <option>Ocio</option>
+              <option>Otros</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar gasto →</button>
         </form>
       </div>
 
       <div class="card">
-        <h2>Mis gastos</h2>
-        <p>Total: <strong id="total">$0</strong></p>
-        <ul id="expensesList"></ul>
+        <h2>Historial</h2>
+        <p class="label" style="margin-bottom: 8px; margin-top: 4px;">Todos los movimientos</p>
+        <ul class="expense-list" id="expensesList"></ul>
+        <div class="empty hidden" id="emptyState">
+          Todavía no hay gastos registrados.
+        </div>
       </div>
     </section>
   </main>
