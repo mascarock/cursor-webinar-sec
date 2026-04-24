@@ -47,7 +47,33 @@ Funciona igual en **Windows**, **macOS** y **Linux**.
 
 ## Configuración opcional
 
-Si querés usar tu propia base MongoDB, definí la variable de entorno antes de `npm start`:
+Si querés usar tu propia base MongoDB en modo dev, definí la variable de entorno antes de `npm start`:
 
 - macOS / Linux: `MONGODB_URI=mongodb://localhost:27017 npm start`
 - Windows (PowerShell): `$env:MONGODB_URI="mongodb://localhost:27017"; npm start`
+
+## Docker (producción / Coolify)
+
+Para correr la app como se desplegaría en producción (con MongoDB de verdad y nginx sirviendo el frontend), usá Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Abrí: http://localhost:8080
+
+Esto levanta tres servicios:
+
+- **mongo** — base de datos persistente (volumen `mongo_data`)
+- **backend** — NestJS (interno, no expuesto)
+- **frontend** — nginx que sirve los estáticos y proxea `/api` al backend
+
+### Deploy en Coolify
+
+1. Conectá tu repo en Coolify y elegí el tipo **Docker Compose**.
+2. Coolify detecta `docker-compose.yaml` automáticamente.
+3. Configurá las variables de entorno (opcional):
+   - `JWT_SECRET` — secreto para firmar JWT (default `secret123`, **cambialo**)
+   - `CORS_ORIGIN` — origen permitido para CORS (default `*`)
+4. Apuntá tu dominio al servicio `frontend` (puerto `80`).
+5. Coolify se encarga del HTTPS automáticamente con Let's Encrypt.

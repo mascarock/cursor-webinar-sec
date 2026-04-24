@@ -363,7 +363,11 @@ select option { background: var(--bg-elev); color: var(--text); }
   border-radius: var(--radius-full);
   font-size: 12px;
 }
-.member-chip .avatar { width: 22px; height: 22px; font-size: 10px; }
+.member-chip .avatar {
+  width: 22px; height: 22px;
+  min-width: 22px; max-width: 22px;
+  font-size: 10px;
+}
 .member-chip-add {
   padding: 6px 12px;
   background: transparent;

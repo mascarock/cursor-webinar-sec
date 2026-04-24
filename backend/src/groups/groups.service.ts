@@ -14,6 +14,7 @@ export interface Group {
   currency: string;
   ownerUsername: string;
   members: Member[];
+  inviteToken: string;
   createdAt: Date;
 }
 
@@ -40,6 +41,7 @@ export class GroupsService {
       currency: currency || 'COP',
       ownerUsername,
       members: [ownerMember],
+      inviteToken: genId() + genId(),
       createdAt: new Date(),
     };
     const result = await this.col.insertOne(group);
@@ -55,6 +57,23 @@ export class GroupsService {
 
   async findById(id: string) {
     return this.col.findOne({ _id: new ObjectId(id) });
+  }
+
+  async findByInviteToken(token: string) {
+    return this.col.findOne({ inviteToken: token });
+  }
+
+  async joinByToken(token: string, username: string) {
+    const group = await this.findByInviteToken(token);
+    if (!group) return null;
+    const already = group.members.some((m) => m.isUser && m.name === username);
+    if (already) return group;
+    const member: Member = { memberId: genId(), name: username, isUser: true };
+    await this.col.updateOne(
+      { _id: group._id },
+      { $push: { members: member } },
+    );
+    return { ...group, members: [...group.members, member] };
   }
 
   async addMember(groupId: string, name: string) {

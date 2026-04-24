@@ -63,6 +63,16 @@ export class GroupsController {
     return this.groups.create(user.username, body?.name, body?.currency);
   }
 
+  @Post('join/:token')
+  async join(@Req() req: Request, @Param('token') token: string) {
+    const user = requireAuth(req);
+    const group = await this.groups.joinByToken(token, user.username);
+    if (!group) {
+      throw new HttpException('Invitación inválida', HttpStatus.NOT_FOUND);
+    }
+    return { ok: true, groupId: group._id };
+  }
+
   @Get(':id')
   async detail(@Req() req: Request, @Param('id') id: string) {
     requireAuth(req);

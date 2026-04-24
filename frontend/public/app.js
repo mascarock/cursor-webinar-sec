@@ -1,4 +1,4 @@
-const API = 'http://localhost:3001';
+const API = location.port === '5173' ? 'http://localhost:3001' : '';
 
 const $ = (sel) => document.querySelector(sel);
 const view = $('#view');
@@ -89,25 +89,30 @@ async function checkSession() {
   }
 }
 
-function renderAuth() {
+function renderAuth(viaInvite = false) {
+  const heroTitle = viaInvite ? 'Te invitaron a un grupo.' : 'Compartí gastos sin enredos.';
+  const heroSub = viaInvite
+    ? 'Iniciá sesión o creá una cuenta para sumarte al grupo.'
+    : 'Registrá lo que pagó cada uno y mirá al instante quién le debe a quién.';
+  const initialTab = viaInvite ? 'register' : 'login';
   view.innerHTML = `
     <div class="hero fade-up">
-      <h1>Compartí gastos sin enredos.</h1>
-      <p>Registrá lo que pagó cada uno y mirá al instante quién le debe a quién.</p>
+      <h1>${heroTitle}</h1>
+      <p>${heroSub}</p>
     </div>
     <div class="card fade-up">
       <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="login">Iniciar sesión</button>
-        <button class="tab" data-tab="register">Registrarse</button>
+        <button class="tab ${initialTab === 'login' ? 'active' : ''}" data-tab="login">Iniciar sesión</button>
+        <button class="tab ${initialTab === 'register' ? 'active' : ''}" data-tab="register">Registrarse</button>
       </div>
-      <form id="loginForm">
+      <form id="loginForm" class="${initialTab === 'login' ? '' : 'hidden'}">
         <div class="field"><label>Usuario</label>
           <input name="username" placeholder="ej: maria" required autocomplete="username" /></div>
         <div class="field"><label>Contraseña</label>
           <input name="password" type="password" placeholder="••••••••" required autocomplete="current-password" /></div>
         <button type="submit" class="btn btn-primary btn-block">Entrar →</button>
       </form>
-      <form id="registerForm" class="hidden">
+      <form id="registerForm" class="${initialTab === 'register' ? '' : 'hidden'}">
         <div class="field"><label>Usuario</label>
           <input name="username" placeholder="Elegí un nombre de usuario" required autocomplete="username" /></div>
         <div class="field"><label>Contraseña</label>
@@ -144,7 +149,8 @@ async function handleAuth(ev, endpoint) {
     currentUser = data.username;
     userBar.classList.remove('hidden');
     userName.textContent = data.username;
-    location.hash = '#/groups';
+    const joined = await consumePendingJoin();
+    if (!joined) location.hash = '#/groups';
   } else {
     $('#authMsg').textContent = data.message || data.error || 'Error';
   }
@@ -287,6 +293,7 @@ function paintGroup() {
           </div>
         </div>
         <div class="group-actions">
+          <button class="btn-icon" id="inviteBtn" title="Invitar miembros">Invitar</button>
           <button class="btn-icon" id="deleteGroupBtn" title="Eliminar grupo">Eliminar</button>
         </div>
       </div>
@@ -324,6 +331,7 @@ function paintGroup() {
   $('#addExpenseBtn').addEventListener('click', () => openExpenseModal(group));
   $('#addMemberBtn').addEventListener('click', () => openAddMemberModal(group));
   $('#deleteGroupBtn').addEventListener('click', () => deleteGroup(group));
+  $('#inviteBtn').addEventListener('click', () => openInviteModal(group));
 
   view.querySelectorAll('.remove-x').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -432,6 +440,41 @@ async function deleteGroup(group) {
   if (!confirm(`¿Eliminar "${group.name}" y todos sus gastos?`)) return;
   await api(`/api/groups/${group._id}`, { method: 'DELETE' });
   location.hash = '#/groups';
+}
+
+/* ─── Invite modal ─── */
+function openInviteModal(group) {
+  const link = `${location.origin}${location.pathname}#/join/${group.inviteToken}`;
+  const waText = encodeURIComponent(`Te invito a "${group.name}" en Gastos Familiares: ${link}`);
+  openModal({
+    title: 'Invitar al grupo',
+    body: `
+      <p style="color: var(--text-muted); font-size: 14px; margin: 0 0 16px;">
+        Compartí este link. Quien lo abra y se registre se suma automáticamente a <strong>${escapeHtml(group.name)}</strong>.
+      </p>
+      <div class="field">
+        <label>Link de invitación</label>
+        <input id="inviteLink" value="${link}" readonly onclick="this.select()" />
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap: wrap; margin-top: 8px;">
+        <button class="btn btn-primary" id="copyLinkBtn" style="flex:1; min-width: 140px;">Copiar link</button>
+        <a class="btn btn-ghost" href="https://wa.me/?text=${waText}" target="_blank" rel="noopener" style="flex:1; min-width: 140px;">WhatsApp</a>
+      </div>
+      <p id="copyMsg" class="msg" style="color: var(--positive);"></p>
+    `,
+    onMount: () => {
+      $('#copyLinkBtn').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(link);
+          $('#copyMsg').textContent = '✓ Link copiado';
+        } catch {
+          $('#inviteLink').select();
+          document.execCommand('copy');
+          $('#copyMsg').textContent = '✓ Link copiado';
+        }
+      });
+    },
+  });
 }
 
 /* ─── Add member modal ─── */
@@ -551,13 +594,48 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+/* ─── Join via invite link ─── */
+const PENDING_JOIN_KEY = 'pendingJoinToken';
+
+async function handleJoin(token) {
+  if (!currentUser) {
+    sessionStorage.setItem(PENDING_JOIN_KEY, token);
+    renderAuth(true);
+    return;
+  }
+  view.innerHTML = `<div class="empty">Uniéndote al grupo…</div>`;
+  const { ok, data } = await api(`/api/groups/join/${token}`, { method: 'POST' });
+  if (ok && data.groupId) {
+    location.hash = `#/groups/${data.groupId}`;
+  } else {
+    view.innerHTML = `<div class="card empty">Invitación inválida o expirada.</div>`;
+  }
+}
+
+async function consumePendingJoin() {
+  const token = sessionStorage.getItem(PENDING_JOIN_KEY);
+  if (!token || !currentUser) return false;
+  sessionStorage.removeItem(PENDING_JOIN_KEY);
+  const { ok, data } = await api(`/api/groups/join/${token}`, { method: 'POST' });
+  if (ok && data.groupId) {
+    location.hash = `#/groups/${data.groupId}`;
+    return true;
+  }
+  return false;
+}
+
 /* ─── Router ─── */
 function route() {
+  const hash = location.hash || '';
+  const joinMatch = hash.match(/^#\/join\/([\w-]+)$/);
+  if (joinMatch) {
+    handleJoin(joinMatch[1]);
+    return;
+  }
   if (!currentUser) {
     renderAuth();
     return;
   }
-  const hash = location.hash || '#/groups';
   const m = hash.match(/^#\/groups\/([\w-]+)$/);
   if (m) {
     renderGroupDetail(m[1]);
