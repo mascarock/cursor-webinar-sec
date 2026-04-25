@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Gastos Familiares icon">
+  <title>Gastos Familiares — Icon</title>
+  <g transform="translate(8 8)">
+    <path d="M40 0 a40 40 0 0 1 0 80 Z" fill="none" stroke="#0A0A0A" stroke-width="6"/>
+    <path d="M40 0 a40 40 0 0 0 0 80 Z" fill="#0A0A0A"/>
+    <line x1="40" y1="-3" x2="40" y2="83" stroke="#0A0A0A" stroke-width="6" stroke-linecap="square"/>
+  </g>
+</svg>

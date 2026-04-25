@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120" role="img" aria-label="Gastos Familiares">
+  <title>Gastos Familiares — Primary lockup</title>
+  <!-- Mark: a circle split cleanly down the middle. Left half filled, right half outlined.
+       Reads as "split a single whole between two parties" — the core idea of the app. -->
+  <g transform="translate(20 20)">
+    <!-- right half: outlined -->
+    <path d="M40 0 a40 40 0 0 1 0 80 Z" fill="none" stroke="#0A0A0A" stroke-width="6"/>
+    <!-- left half: filled -->
+    <path d="M40 0 a40 40 0 0 0 0 80 Z" fill="#0A0A0A"/>
+    <!-- vertical split line for crispness at small sizes -->
+    <line x1="40" y1="-3" x2="40" y2="83" stroke="#0A0A0A" stroke-width="6" stroke-linecap="square"/>
+  </g>
+  <!-- Wordmark -->
+  <g transform="translate(132 0)" fill="#0A0A0A" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+    <text x="0" y="55" font-size="32" font-weight="700" letter-spacing="-0.5">Gastos</text>
+    <text x="0" y="92" font-size="32" font-weight="400" letter-spacing="-0.5">Familiares</text>
+  </g>
+</svg>

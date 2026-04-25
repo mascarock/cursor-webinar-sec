@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 80" width="560" height="80" role="img" aria-label="Gastos Familiares">
+  <title>Gastos Familiares — Horizontal lockup</title>
+  <g transform="translate(8 8)">
+    <path d="M32 0 a32 32 0 0 1 0 64 Z" fill="none" stroke="#0A0A0A" stroke-width="5"/>
+    <path d="M32 0 a32 32 0 0 0 0 64 Z" fill="#0A0A0A"/>
+    <line x1="32" y1="-2" x2="32" y2="66" stroke="#0A0A0A" stroke-width="5" stroke-linecap="square"/>
+  </g>
+  <g transform="translate(96 0)" fill="#0A0A0A" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+    <text x="0" y="50" font-size="34" letter-spacing="-0.6">
+      <tspan font-weight="700">Gastos</tspan><tspan font-weight="400" dx="8">Familiares</tspan>
+    </text>
+  </g>
+</svg>
