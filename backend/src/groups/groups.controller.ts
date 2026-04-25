@@ -9,12 +9,16 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { GroupsService } from './groups.service';
 import { BalancesService } from './balances.service';
 import { ExpensesService } from '../expenses/expenses.service';
 import { FxService } from '../fx/fx.service';
 import { getUserFromRequest } from '../auth/jwt.util';
+import { AddMemberDto } from './dto/add-member.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { CreateGroupDto } from './dto/create-group.dto';
 
 function requireAuth(req: Request) {
   const user = getUserFromRequest(req);
@@ -24,6 +28,8 @@ function requireAuth(req: Request) {
   return user;
 }
 
+@ApiTags('groups')
+@ApiSecurity('access-token')
 @Controller('api/groups')
 export class GroupsController {
   constructor(
@@ -34,6 +40,8 @@ export class GroupsController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'List groups (summary for current user)' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
   async list(@Req() req: Request) {
     const user = requireAuth(req);
     const groups = await this.groups.listForUser(user.username);
@@ -71,12 +79,16 @@ export class GroupsController {
   }
 
   @Post()
-  async create(@Req() req: Request, @Body() body: { name: string; currency: string }) {
+  @ApiOperation({ summary: 'Create group' })
+  async create(@Req() req: Request, @Body() body: CreateGroupDto) {
     const user = requireAuth(req);
     return this.groups.create(user.username, body?.name, body?.currency);
   }
 
   @Post('join/:token')
+  @ApiOperation({ summary: 'Join group by invite token' })
+  @ApiParam({ name: 'token', description: 'Invitation token' })
+  @ApiResponse({ status: 404, description: 'Invalid invitation' })
   async join(@Req() req: Request, @Param('token') token: string) {
     const user = requireAuth(req);
     const group = await this.groups.joinByToken(token, user.username);
@@ -87,6 +99,9 @@ export class GroupsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Group detail (members, expenses, balances, FX)' })
+  @ApiParam({ name: 'id', description: 'Group id' })
+  @ApiResponse({ status: 404, description: 'Group not found' })
   async detail(@Req() req: Request, @Param('id') id: string) {
     requireAuth(req);
     const group = await this.groups.findById(id);
@@ -127,13 +142,17 @@ export class GroupsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete group' })
+  @ApiParam({ name: 'id' })
   async remove(@Req() req: Request, @Param('id') id: string) {
     requireAuth(req);
     return this.groups.delete(id);
   }
 
   @Post(':id/members')
-  async addMember(@Req() req: Request, @Param('id') id: string, @Body() body: { name: string }) {
+  @ApiOperation({ summary: 'Add member' })
+  @ApiParam({ name: 'id' })
+  async addMember(@Req() req: Request, @Param('id') id: string, @Body() body: AddMemberDto) {
     requireAuth(req);
     if (!body?.name?.trim()) {
       throw new HttpException('Name is required', HttpStatus.BAD_REQUEST);
@@ -142,6 +161,9 @@ export class GroupsController {
   }
 
   @Delete(':id/members/:memberId')
+  @ApiOperation({ summary: 'Remove member (fails if they appear in expenses)' })
+  @ApiParam({ name: 'id' })
+  @ApiParam({ name: 'memberId' })
   async removeMember(
     @Req() req: Request,
     @Param('id') id: string,
@@ -172,29 +194,37 @@ export class GroupsController {
   }
 
   @Get(':id/expenses')
+  @ApiOperation({ summary: 'List expenses in group' })
+  @ApiParam({ name: 'id' })
   async listExpenses(@Req() req: Request, @Param('id') id: string) {
     requireAuth(req);
     return this.expenses.list(id);
   }
 
   @Post(':id/expenses')
-  async createExpense(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
+  @ApiOperation({ summary: 'Add expense' })
+  @ApiParam({ name: 'id' })
+  @ApiResponse({ status: 400, description: 'Validation or business rule error' })
+  async createExpense(@Req() req: Request, @Param('id') id: string, @Body() body: CreateExpenseDto) {
     requireAuth(req);
     const group = await this.groups.findById(id);
     if (!group) throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
-    if (!body?.splitBetween?.length) {
-      body.splitBetween = group.members.map((m) => m.memberId);
+    const data: any = { ...body };
+    if (!data?.splitBetween?.length) {
+      data.splitBetween = group.members.map((m) => m.memberId);
     }
     const validIds = new Set(group.members.map((m) => m.memberId));
-    if (!validIds.has(String(body.paidBy))) {
+    if (!validIds.has(String(data.paidBy))) {
       throw new HttpException('Invalid payer', HttpStatus.BAD_REQUEST);
     }
-    body.splitBetween = body.splitBetween.map(String).filter((id: string) => validIds.has(id));
-    if (!body.splitBetween.length) {
+    data.splitBetween = data.splitBetween.map(String).filter((memberId: string) =>
+      validIds.has(memberId),
+    );
+    if (!data.splitBetween.length) {
       throw new HttpException('Select at least one valid member', HttpStatus.BAD_REQUEST);
     }
     try {
-      const created = await this.expenses.create(id, body, group.currency);
+      const created = await this.expenses.create(id, data, group.currency);
       return { ok: true, id: created._id };
     } catch (err: any) {
       throw new HttpException(err?.message || 'Error', HttpStatus.BAD_REQUEST);
@@ -202,6 +232,9 @@ export class GroupsController {
   }
 
   @Delete(':id/expenses/:expenseId')
+  @ApiOperation({ summary: 'Delete expense' })
+  @ApiParam({ name: 'id' })
+  @ApiParam({ name: 'expenseId' })
   async deleteExpense(
     @Req() req: Request,
     @Param('id') id: string,

@@ -1,0 +1,14 @@
+{
+  "name": "presentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cursor × NEXO · Sesión 03 — Código Seguro con Cursor",
+  "scripts": {
+    "present":   "npx --yes serve@14 web -l 4321 --no-port-switching",
+    "open":      "open http://localhost:4321 || xdg-open http://localhost:4321",
+    "pptx":      "python3 transform.py"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
