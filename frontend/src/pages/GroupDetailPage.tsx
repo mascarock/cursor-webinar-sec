@@ -211,7 +211,7 @@ function AddMemberForm({
 function InviteContent({ group }: { group: Group }) {
   const link = `${location.origin}${location.pathname}#/join/${group.inviteToken}`;
   const waText = encodeURIComponent(
-    `Te invito a "${group.name}" en Gastos Familiares: ${link}`,
+    `Te invito a "${group.name}" en finfam: ${link}`,
   );
   const [copyMsg, setCopyMsg] = useState('');
 

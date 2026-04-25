@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Gastos Familiares app icon">
-  <title>Gastos Familiares — App icon (rounded square)</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="finfam app icon">
+  <title>finfam app icon (rounded square)</title>
   <rect width="1024" height="1024" rx="224" ry="224" fill="#FFFFFF"/>
   <g transform="translate(232 232)">
     <path d="M280 0 a280 280 0 0 1 0 560 Z" fill="none" stroke="#0A0A0A" stroke-width="44"/>
