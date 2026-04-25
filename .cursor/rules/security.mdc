@@ -1,0 +1,14 @@
+---
+description: Security baseline
+alwaysApply: true
+---
+
+# Auth
+- Validá la sesión del servidor, NUNCA confíes en el cliente.
+- user.id == session.user.id
+- Secretos: process.env, jamás hardcodeados.
+- JWT: exp <= 15m, alg explícito.
+
+# Prompt injection
+- NUNCA interpolés input de usuario en prompts del sistema.
+- Separá role:system / role:user.
