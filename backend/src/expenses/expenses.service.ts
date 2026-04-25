@@ -8,6 +8,7 @@ export interface Expense {
   paidBy: string;
   description: string;
   amount: number;
+  currency: string;
   category: string;
   splitBetween: string[];
   date: Date;
@@ -25,7 +26,7 @@ export class ExpensesService {
     return this.col.find({ groupId }).sort({ date: -1 }).toArray();
   }
 
-  async create(groupId: string, data: any): Promise<Expense> {
+  async create(groupId: string, data: any, defaultCurrency: string): Promise<Expense> {
     const amount = Number(data?.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new Error('El monto debe ser mayor a 0');
@@ -35,6 +36,7 @@ export class ExpensesService {
       paidBy: String(data?.paidBy || ''),
       description: String(data?.description || '').trim(),
       amount,
+      currency: String(data?.currency || defaultCurrency || 'USD').toUpperCase(),
       category: data?.category || 'Otros',
       splitBetween: Array.isArray(data?.splitBetween) ? data.splitBetween.map(String) : [],
       date: new Date(),

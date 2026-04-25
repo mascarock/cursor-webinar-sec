@@ -13,6 +13,7 @@ import { Request } from 'express';
 import { GroupsService } from './groups.service';
 import { BalancesService } from './balances.service';
 import { ExpensesService } from '../expenses/expenses.service';
+import { FxService } from '../fx/fx.service';
 import { getUserFromRequest } from '../auth/jwt.util';
 
 function requireAuth(req: Request) {
@@ -29,6 +30,7 @@ export class GroupsController {
     private readonly groups: GroupsService,
     private readonly expenses: ExpensesService,
     private readonly balances: BalancesService,
+    private readonly fx: FxService,
   ) {}
 
   @Get()
@@ -39,10 +41,21 @@ export class GroupsController {
     const enriched = await Promise.all(
       groups.map(async (g) => {
         const exps = await this.expenses.list(String(g._id));
-        const bals = this.balances.computeBalances(g.members, exps as any);
+        const converted = await this.fx.convertMany(
+          exps.map((e: any) => ({
+            amount: Number(e.amount) || 0,
+            currency: e.currency || g.currency,
+          })),
+          g.currency,
+        );
+        const expsConverted = exps.map((e: any, i: number) => ({
+          ...e,
+          amount: converted[i],
+        }));
+        const bals = this.balances.computeBalances(g.members, expsConverted as any);
         const me = g.members.find((m) => m.name === user.username);
         const myBalance = me ? bals.find((b) => b.memberId === me.memberId)?.balance ?? 0 : 0;
-        const total = exps.reduce((s, e: any) => s + (Number(e.amount) || 0), 0);
+        const total = converted.reduce((s, n) => s + n, 0);
         return {
           _id: g._id,
           name: g.name,
@@ -79,10 +92,38 @@ export class GroupsController {
     const group = await this.groups.findById(id);
     if (!group) throw new HttpException('Grupo no encontrado', HttpStatus.NOT_FOUND);
     const expenses = await this.expenses.list(id);
-    const balances = this.balances.computeBalances(group.members, expenses as any);
+
+    const converted = await this.fx.convertMany(
+      expenses.map((e: any) => ({
+        amount: Number(e.amount) || 0,
+        currency: e.currency || group.currency,
+      })),
+      group.currency,
+    );
+
+    const expensesEnriched = expenses.map((e: any, i: number) => ({
+      ...e,
+      currency: e.currency || group.currency,
+      convertedAmount: Math.round(converted[i] * 100) / 100,
+    }));
+
+    const expensesForBalances = expenses.map((e: any, i: number) => ({
+      ...e,
+      amount: converted[i],
+    }));
+
+    const balances = this.balances.computeBalances(group.members, expensesForBalances as any);
     const settlements = this.balances.computeSettlements(balances);
-    const total = expenses.reduce((s, e: any) => s + (Number(e.amount) || 0), 0);
-    return { group, expenses, balances, settlements, total };
+    const total = converted.reduce((s, n) => s + n, 0);
+    const fxInfo = await this.fx.getRates();
+    return {
+      group,
+      expenses: expensesEnriched,
+      balances,
+      settlements,
+      total,
+      fx: { source: fxInfo.source, fetchedAt: fxInfo.fetchedAt, base: fxInfo.base },
+    };
   }
 
   @Delete(':id')
@@ -153,7 +194,7 @@ export class GroupsController {
       throw new HttpException('Seleccioná al menos un miembro válido', HttpStatus.BAD_REQUEST);
     }
     try {
-      const created = await this.expenses.create(id, body);
+      const created = await this.expenses.create(id, body, group.currency);
       return { ok: true, id: created._id };
     } catch (err: any) {
       throw new HttpException(err?.message || 'Error', HttpStatus.BAD_REQUEST);
