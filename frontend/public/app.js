@@ -77,6 +77,28 @@ async function api(path, options = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
+const FX_TTL_MS = 12 * 60 * 60 * 1000;
+let fxCache = null;
+async function getRatesUSD() {
+  if (fxCache && Date.now() - fxCache.fetchedAt < FX_TTL_MS) return fxCache.rates;
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!res.ok) throw new Error('fx http');
+    const data = await res.json();
+    if (data?.result !== 'success' || !data?.rates) throw new Error('fx payload');
+    fxCache = { rates: data.rates, fetchedAt: Date.now() };
+    return fxCache.rates;
+  } catch {
+    return null;
+  }
+}
+async function convertAmount(amount, from, to) {
+  if (!Number.isFinite(amount) || from === to) return amount;
+  const rates = await getRatesUSD();
+  if (!rates || !rates[from] || !rates[to]) return null;
+  return (amount / rates[from]) * rates[to];
+}
+
 /* ─── Auth ─── */
 async function checkSession() {
   const { ok, data } = await api('/api/me');
@@ -373,6 +395,13 @@ function expensesTabHtml(expenses, group) {
           const payerName = payer ? payer.name : 'Alguien';
           const splitCount = e.splitBetween?.length || group.members.length;
           const splitLabel = splitCount === 1 ? 'sin dividir' : `dividido entre ${splitCount}`;
+          const expenseCurrency = e.currency || group.currency;
+          const showConversion =
+            expenseCurrency !== group.currency && typeof e.convertedAmount === 'number';
+          const amountHtml = showConversion
+            ? `<div class="expense-amount">${formatMoney(e.amount, expenseCurrency)}</div>
+               <div class="expense-amount-converted">≈ ${formatMoney(e.convertedAmount, group.currency)}</div>`
+            : `<div class="expense-amount">${formatMoney(e.amount, expenseCurrency)}</div>`;
           return `
             <li class="expense-row">
               ${avatar(payerName)}
@@ -380,8 +409,8 @@ function expensesTabHtml(expenses, group) {
                 <div class="expense-desc">${escapeHtml(e.description) || '<span style="color:var(--text-muted)">(sin descripción)</span>'}</div>
                 <div class="expense-meta">${escapeHtml(payerName)} pagó · ${escapeHtml(e.category)} · ${splitLabel} · ${formatDate(e.date)}</div>
               </div>
-              <div>
-                <div class="expense-amount">${formatMoney(e.amount, group.currency)}</div>
+              <div class="expense-amount-wrap">
+                ${amountHtml}
               </div>
               <button class="delete-btn" data-id="${e._id}" aria-label="Eliminar">×</button>
             </li>
@@ -522,14 +551,23 @@ function openExpenseModal(group) {
     </label>
   `).join('');
 
+  const currencyOptions = CURRENCIES.map(
+    (c) => `<option value="${c.code}" ${c.code === group.currency ? 'selected' : ''}>${c.code} — ${c.label}</option>`,
+  ).join('');
+
   openModal({
     title: 'Nuevo gasto',
     body: `
       <form id="newExpenseForm">
         <div class="field"><label>Descripción</label>
           <input name="description" placeholder="ej: Cena" required autofocus /></div>
-        <div class="field"><label>Monto (${group.currency})</label>
-          <input name="amount" type="number" step="0.01" min="0.01" placeholder="0" required inputmode="decimal" /></div>
+        <div class="field-row">
+          <div class="field" style="flex:2;"><label>Monto</label>
+            <input name="amount" type="number" step="0.01" min="0.01" placeholder="0" required inputmode="decimal" /></div>
+          <div class="field" style="flex:1;"><label>Moneda</label>
+            <select name="currency">${currencyOptions}</select></div>
+        </div>
+        <p class="label" id="fxHint" style="margin: -4px 0 12px; min-height: 1em; color: var(--text-muted); font-size: 12px;"></p>
         <div class="field"><label>Pagado por</label>
           <select name="paidBy" required>${memberOptions}</select></div>
         <div class="field"><label>Categoría</label>
@@ -546,9 +584,33 @@ function openExpenseModal(group) {
       </form>
     `,
     onMount: () => {
-      $('#newExpenseForm').addEventListener('submit', async (ev) => {
+      const form = $('#newExpenseForm');
+      const hint = $('#fxHint');
+
+      const refreshHint = async () => {
+        const amount = Number(form.amount.value);
+        const currency = form.currency.value;
+        if (!Number.isFinite(amount) || amount <= 0 || currency === group.currency) {
+          hint.textContent = '';
+          return;
+        }
+        try {
+          const converted = await convertAmount(amount, currency, group.currency);
+          if (converted == null) {
+            hint.textContent = '';
+            return;
+          }
+          hint.textContent = `≈ ${formatMoney(converted, group.currency)} en la moneda del grupo`;
+        } catch {
+          hint.textContent = '';
+        }
+      };
+
+      form.amount.addEventListener('input', refreshHint);
+      form.currency.addEventListener('change', refreshHint);
+
+      form.addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const form = ev.target;
         const splitBetween = [...form.querySelectorAll('input[name="split"]:checked')].map((c) => c.value);
         if (!splitBetween.length) {
           alert('Seleccioná al menos un miembro');
@@ -562,6 +624,7 @@ function openExpenseModal(group) {
         const body = {
           description: form.description.value.trim(),
           amount,
+          currency: form.currency.value,
           paidBy: form.paidBy.value,
           category: form.category.value,
           splitBetween,
