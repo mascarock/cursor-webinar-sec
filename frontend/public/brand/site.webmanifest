@@ -1,7 +1,7 @@
 {
-  "name": "Gastos Familiares",
-  "short_name": "Gastos",
-  "description": "Comparte gastos sin complicaciones.",
+  "name": "finfam",
+  "short_name": "finfam",
+  "description": "Finanzas familiares simples.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
