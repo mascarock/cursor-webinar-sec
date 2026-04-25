@@ -107,6 +107,26 @@ export class GroupsController {
     @Param('memberId') memberId: string,
   ) {
     requireAuth(req);
+    const group = await this.groups.findById(id);
+    if (!group) throw new HttpException('Grupo no encontrado', HttpStatus.NOT_FOUND);
+    const member = group.members.find((m) => m.memberId === memberId);
+    if (!member) throw new HttpException('Miembro no encontrado', HttpStatus.NOT_FOUND);
+    if (group.members.length <= 1) {
+      throw new HttpException(
+        'No se puede quitar el último miembro del grupo',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const expenses = await this.expenses.list(id);
+    const hasExpenses = expenses.some(
+      (e: any) => e.paidBy === memberId || e.splitBetween?.includes(memberId),
+    );
+    if (hasExpenses) {
+      throw new HttpException(
+        `No se puede quitar a ${member.name}: tiene gastos asociados. Eliminá primero esos gastos.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return this.groups.removeMember(id, memberId);
   }
 
@@ -124,8 +144,20 @@ export class GroupsController {
     if (!body?.splitBetween?.length) {
       body.splitBetween = group.members.map((m) => m.memberId);
     }
-    const created = await this.expenses.create(id, body);
-    return { ok: true, id: created._id };
+    const validIds = new Set(group.members.map((m) => m.memberId));
+    if (!validIds.has(String(body.paidBy))) {
+      throw new HttpException('Pagador inválido', HttpStatus.BAD_REQUEST);
+    }
+    body.splitBetween = body.splitBetween.map(String).filter((id: string) => validIds.has(id));
+    if (!body.splitBetween.length) {
+      throw new HttpException('Seleccioná al menos un miembro válido', HttpStatus.BAD_REQUEST);
+    }
+    try {
+      const created = await this.expenses.create(id, body);
+      return { ok: true, id: created._id };
+    } catch (err: any) {
+      throw new HttpException(err?.message || 'Error', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Delete(':id/expenses/:expenseId')

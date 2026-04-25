@@ -26,11 +26,15 @@ export class ExpensesService {
   }
 
   async create(groupId: string, data: any): Promise<Expense> {
+    const amount = Number(data?.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error('El monto debe ser mayor a 0');
+    }
     const expense: Expense = {
       groupId,
       paidBy: String(data?.paidBy || ''),
-      description: data?.description || '',
-      amount: Number(data?.amount) || 0,
+      description: String(data?.description || '').trim(),
+      amount,
       category: data?.category || 'Otros',
       splitBetween: Array.isArray(data?.splitBetween) ? data.splitBetween.map(String) : [],
       date: new Date(),

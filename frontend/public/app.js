@@ -63,6 +63,10 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
 }
 
+function plural(count, singular, pluralForm) {
+  return `${count} ${count === 1 ? singular : pluralForm}`;
+}
+
 async function api(path, options = {}) {
   const res = await fetch(API + path, {
     headers: { 'Content-Type': 'application/json' },
@@ -186,11 +190,6 @@ async function renderGroupsList() {
     `;
   } else {
     container.innerHTML = `<div class="group-list">${data.map(groupCardHtml).join('')}</div>`;
-    container.querySelectorAll('[data-group-id]').forEach((el) => {
-      el.addEventListener('click', () => {
-        location.hash = `#/groups/${el.dataset.groupId}`;
-      });
-    });
   }
 
   $('#newGroupBtn').addEventListener('click', openNewGroupModal);
@@ -212,12 +211,13 @@ function groupCardHtml(g) {
     cls = 'negative';
     amount = formatMoney(-bal, g.currency);
   }
+  const meta = `${plural(g.memberCount, 'miembro', 'miembros')} · ${plural(g.expenseCount, 'gasto', 'gastos')} · ${g.currency}`;
   return `
-    <a class="group-card" data-group-id="${g._id}">
+    <a class="group-card" href="#/groups/${g._id}" data-group-id="${g._id}">
       ${avatar(g.name, 'lg')}
       <div class="group-card-info">
         <div class="group-card-title">${escapeHtml(g.name)}</div>
-        <div class="group-card-meta">${g.memberCount} miembros · ${g.expenseCount} gastos · ${g.currency}</div>
+        <div class="group-card-meta">${meta}</div>
       </div>
       <div class="group-card-balance">
         <div class="balance-label">${label}</div>
@@ -288,7 +288,7 @@ function paintGroup() {
           <div style="min-width:0;">
             <h1>${escapeHtml(group.name)}</h1>
             <div class="group-header-meta">
-              ${formatMoney(total, group.currency)} en total · ${expenses.length} gastos · ${group.currency}
+              ${formatMoney(total, group.currency)} en total · ${plural(expenses.length, 'gasto', 'gastos')} · ${group.currency}
             </div>
           </div>
         </div>
@@ -336,7 +336,11 @@ function paintGroup() {
   view.querySelectorAll('.remove-x').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('¿Quitar a este miembro?')) return;
-      await api(`/api/groups/${group._id}/members/${btn.dataset.memberId}`, { method: 'DELETE' });
+      const { ok, data } = await api(`/api/groups/${group._id}/members/${btn.dataset.memberId}`, { method: 'DELETE' });
+      if (!ok) {
+        alert(data?.message || 'No se pudo quitar al miembro');
+        return;
+      }
       renderGroupDetail(group._id);
     });
   });
@@ -368,12 +372,13 @@ function expensesTabHtml(expenses, group) {
           const payer = group.members.find((m) => m.memberId === e.paidBy);
           const payerName = payer ? payer.name : 'Alguien';
           const splitCount = e.splitBetween?.length || group.members.length;
+          const splitLabel = splitCount === 1 ? 'sin dividir' : `dividido entre ${splitCount}`;
           return `
             <li class="expense-row">
               ${avatar(payerName)}
               <div class="expense-info">
-                <div class="expense-desc">${e.description}</div>
-                <div class="expense-meta">${escapeHtml(payerName)} pagó · ${escapeHtml(e.category)} · dividido entre ${splitCount} · ${formatDate(e.date)}</div>
+                <div class="expense-desc">${escapeHtml(e.description) || '<span style="color:var(--text-muted)">(sin descripción)</span>'}</div>
+                <div class="expense-meta">${escapeHtml(payerName)} pagó · ${escapeHtml(e.category)} · ${splitLabel} · ${formatDate(e.date)}</div>
               </div>
               <div>
                 <div class="expense-amount">${formatMoney(e.amount, group.currency)}</div>
@@ -524,7 +529,7 @@ function openExpenseModal(group) {
         <div class="field"><label>Descripción</label>
           <input name="description" placeholder="ej: Cena" required autofocus /></div>
         <div class="field"><label>Monto (${group.currency})</label>
-          <input name="amount" type="number" step="0.01" min="0" placeholder="0" required inputmode="decimal" /></div>
+          <input name="amount" type="number" step="0.01" min="0.01" placeholder="0" required inputmode="decimal" /></div>
         <div class="field"><label>Pagado por</label>
           <select name="paidBy" required>${memberOptions}</select></div>
         <div class="field"><label>Categoría</label>
@@ -549,17 +554,26 @@ function openExpenseModal(group) {
           alert('Seleccioná al menos un miembro');
           return;
         }
+        const amount = Number(form.amount.value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          alert('El monto debe ser mayor a 0');
+          return;
+        }
         const body = {
-          description: form.description.value,
-          amount: Number(form.amount.value),
+          description: form.description.value.trim(),
+          amount,
           paidBy: form.paidBy.value,
           category: form.category.value,
           splitBetween,
         };
-        await api(`/api/groups/${group._id}/expenses`, {
+        const { ok, data } = await api(`/api/groups/${group._id}/expenses`, {
           method: 'POST',
           body: JSON.stringify(body),
         });
+        if (!ok) {
+          alert(data?.message || 'No se pudo guardar el gasto');
+          return;
+        }
         closeModal();
         renderGroupDetail(group._id);
       });
