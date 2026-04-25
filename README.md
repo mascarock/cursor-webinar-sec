@@ -1,4 +1,4 @@
-# Gastos Familiares
+# finfam
 
 
 <img width="484" height="692" alt="image" src="https://github.com/user-attachments/assets/d7a8618f-f9b7-4f59-a9ef-ef502f7d5091" />

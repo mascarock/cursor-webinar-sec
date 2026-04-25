@@ -1,7 +1,7 @@
 {
-  "name": "gastos-familiares",
+  "name": "finfam",
   "version": "1.0.0",
-  "description": "App de gastos familiares (demo para webinar) - NestJS + frontend",
+  "description": "finfam - finanzas familiares simples",
   "private": true,
   "scripts": {
     "install": "npm --prefix backend install && npm --prefix frontend install",
