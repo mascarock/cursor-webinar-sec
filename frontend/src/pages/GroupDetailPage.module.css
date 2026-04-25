@@ -1,0 +1,68 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.headerLeft {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.headerText { min-width: 0; }
+
+.headerText h1 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.backLink {
+  display: inline-flex;
+  margin-bottom: 16px;
+}
+
+.fxHint {
+  margin: -4px 0 12px;
+  min-height: 1em;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.inviteInfo {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.inviteActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.copyMsg {
+  color: var(--positive);
+  font-size: 13px;
+  margin-top: 8px;
+  min-height: 1.2em;
+}
