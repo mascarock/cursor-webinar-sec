@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useT } from '../i18n';
 import { groupsApi } from '../api';
 
 const PENDING_JOIN_KEY = 'pendingJoinToken';
@@ -20,6 +21,7 @@ interface AuthPageProps {
 
 export default function AuthPage({ viaInvite = false }: AuthPageProps) {
   const { login, register } = useAuth();
+  const t = useT();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(
     viaInvite ? 'register' : 'login',
@@ -27,11 +29,9 @@ export default function AuthPage({ viaInvite = false }: AuthPageProps) {
   const [error, setError] = useState('');
 
   const heroTitle = viaInvite
-    ? 'Te invitaron a un grupo.'
-    : 'Comparte gastos sin complicaciones.';
-  const heroSub = viaInvite
-    ? 'Inicia sesión o crea una cuenta para unirte al grupo.'
-    : 'Registra lo que pagó cada persona y consulta al instante quién le debe a quién.';
+    ? t('auth.heroTitleInvite')
+    : t('auth.heroTitle');
+  const heroSub = viaInvite ? t('auth.heroSubInvite') : t('auth.heroSub');
 
   const handleAfterAuth = async () => {
     const groupId = await consumePendingJoin();
@@ -53,7 +53,7 @@ export default function AuthPage({ viaInvite = false }: AuthPageProps) {
     if (result.ok) {
       await handleAfterAuth();
     } else {
-      setError(result.message ?? 'Error');
+      setError(result.message ?? t('auth.loginErrorFallback'));
     }
   };
 
@@ -68,7 +68,7 @@ export default function AuthPage({ viaInvite = false }: AuthPageProps) {
     if (result.ok) {
       await handleAfterAuth();
     } else {
-      setError(result.message ?? 'Error');
+      setError(result.message ?? t('auth.registerErrorFallback'));
     }
   };
 
@@ -84,39 +84,39 @@ export default function AuthPage({ viaInvite = false }: AuthPageProps) {
             className={`tab${activeTab === 'login' ? ' active' : ''}`}
             onClick={() => { setActiveTab('login'); setError(''); }}
           >
-            Iniciar sesión
+            {t('auth.tabLogin')}
           </button>
           <button
             className={`tab${activeTab === 'register' ? ' active' : ''}`}
             onClick={() => { setActiveTab('register'); setError(''); }}
           >
-            Registrarse
+            {t('auth.tabRegister')}
           </button>
         </div>
 
         {activeTab === 'login' && (
           <form onSubmit={handleLogin}>
             <div className="field">
-              <label>Usuario</label>
+              <label>{t('auth.username')}</label>
               <input
                 name="username"
-                placeholder="ej: maria"
+                placeholder={t('auth.usernamePlaceholder')}
                 required
                 autoComplete="username"
               />
             </div>
             <div className="field">
-              <label>Contraseña</label>
+              <label>{t('auth.password')}</label>
               <input
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 required
                 autoComplete="current-password"
               />
             </div>
             <button type="submit" className="btn btn-primary btn-block">
-              Entrar →
+              {t('auth.submitLogin')}
             </button>
           </form>
         )}
@@ -124,26 +124,26 @@ export default function AuthPage({ viaInvite = false }: AuthPageProps) {
         {activeTab === 'register' && (
           <form onSubmit={handleRegister}>
             <div className="field">
-              <label>Usuario</label>
+              <label>{t('auth.username')}</label>
               <input
                 name="username"
-                placeholder="Elige un nombre de usuario"
+                placeholder={t('auth.chooseUsernamePlaceholder')}
                 required
                 autoComplete="username"
               />
             </div>
             <div className="field">
-              <label>Contraseña</label>
+              <label>{t('auth.password')}</label>
               <input
                 name="password"
                 type="password"
-                placeholder="Elige una contraseña"
+                placeholder={t('auth.choosePasswordPlaceholder')}
                 required
                 autoComplete="new-password"
               />
             </div>
             <button type="submit" className="btn btn-primary btn-block">
-              Crear cuenta →
+              {t('auth.submitRegister')}
             </button>
           </form>
         )}

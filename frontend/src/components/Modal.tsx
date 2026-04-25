@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '../i18n';
 import styles from './Modal.module.css';
 
 interface ModalProps {
@@ -9,6 +10,7 @@ interface ModalProps {
 }
 
 export default function Modal({ title, onClose, children }: ModalProps) {
+  const t = useT();
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -21,7 +23,7 @@ export default function Modal({ title, onClose, children }: ModalProps) {
           <div className={styles.title}>{title}</div>
           <button
             className={styles.close}
-            aria-label="Cerrar"
+            aria-label={t('modal.closeAria')}
             onClick={onClose}
           >
             ×

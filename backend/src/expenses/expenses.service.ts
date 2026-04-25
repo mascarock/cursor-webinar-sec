@@ -29,7 +29,7 @@ export class ExpensesService {
   async create(groupId: string, data: any, defaultCurrency: string): Promise<Expense> {
     const amount = Number(data?.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error('El monto debe ser mayor a 0');
+      throw new Error('Amount must be greater than 0');
     }
     const expense: Expense = {
       groupId,

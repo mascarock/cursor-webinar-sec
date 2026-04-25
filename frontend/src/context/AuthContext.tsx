@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(d.username);
         return { ok: true };
       }
-      return { ok: false, message: d.message || d.error || 'Error al iniciar sesión' };
+      return { ok: false, message: d.message || d.error || 'Login failed' };
     },
     [],
   );
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(d.username);
         return { ok: true };
       }
-      return { ok: false, message: d.message || d.error || 'Error al registrarse' };
+      return { ok: false, message: d.message || d.error || 'Registration failed' };
     },
     [],
   );

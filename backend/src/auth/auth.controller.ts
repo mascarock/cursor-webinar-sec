@@ -22,11 +22,11 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!body?.username || !body?.password) {
-      throw new HttpException('Faltan datos', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Missing data', HttpStatus.BAD_REQUEST);
     }
     const user = await this.auth.register(body.username, body.password);
     if (!user) {
-      throw new HttpException('Usuario ya existe', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Username already exists', HttpStatus.BAD_REQUEST);
     }
     const token = signToken({ id: user._id, username: user.username });
     res.cookie('token', token);
@@ -40,7 +40,7 @@ export class AuthController {
   ) {
     const user = await this.auth.login(body?.username, body?.password);
     if (!user) {
-      throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     const token = signToken({ id: user._id, username: user.username });
     res.cookie('token', token);
@@ -57,7 +57,7 @@ export class AuthController {
   me(@Req() req: Request) {
     const user = getUserFromRequest(req);
     if (!user) {
-      throw new HttpException('No autenticado', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
     }
     return { username: user.username };
   }

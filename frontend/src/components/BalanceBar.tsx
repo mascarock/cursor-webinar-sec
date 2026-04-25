@@ -1,5 +1,6 @@
 import { type Balance } from '../api';
 import { formatMoney } from '../utils';
+import { useT } from '../i18n';
 import Avatar from './Avatar';
 import styles from './BalanceBar.module.css';
 
@@ -9,11 +10,12 @@ interface BalanceListProps {
 }
 
 export default function BalanceList({ balances, groupCurrency }: BalanceListProps) {
+  const t = useT();
   const max = Math.max(1, ...balances.map((b) => Math.abs(b.balance)));
 
   return (
     <div className="card">
-      <p className="section-label">Balance por miembro</p>
+      <p className="section-label">{t('balances.title')}</p>
       {balances.map((b) => {
         const pct = (Math.abs(b.balance) / max) * 50;
         const isPositive = b.balance > 0.01;

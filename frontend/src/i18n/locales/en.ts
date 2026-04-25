@@ -180,4 +180,14 @@ const messages = {
 } as const;
 
 export default messages;
-export type Messages = typeof messages;
+
+/**
+ * Widens all leaf string literals to `string`, so other locales can supply
+ * any translation without TypeScript complaining that it doesn't match
+ * the exact English wording.
+ */
+type WidenStrings<T> = T extends string
+  ? string
+  : { [K in keyof T]: WidenStrings<T[K]> };
+
+export type Messages = WidenStrings<typeof messages>;

@@ -13,12 +13,8 @@ import {
   type GroupDetail,
   type Group,
 } from '../api';
-import {
-  CURRENCIES,
-  formatMoney,
-  plural,
-  convertAmount,
-} from '../utils';
+import { CURRENCIES, formatMoney, convertAmount } from '../utils';
+import { useT, type TFn } from '../i18n';
 import Avatar from '../components/Avatar';
 import MemberChips from '../components/MemberChip';
 import ExpenseList from '../components/ExpenseRow';
@@ -30,6 +26,17 @@ import styles from './GroupDetailPage.module.css';
 type Tab = 'expenses' | 'balances' | 'settle';
 type ActiveModal = 'expense' | 'member' | 'invite' | null;
 
+const CATEGORY_KEYS = [
+  'Mercado',
+  'Comida',
+  'Transporte',
+  'Hospedaje',
+  'Servicios',
+  'Salud',
+  'Ocio',
+  'Otros',
+] as const;
+
 /* ─── New Expense Form ─── */
 function NewExpenseForm({
   group,
@@ -38,6 +45,7 @@ function NewExpenseForm({
   group: Group;
   onSuccess: () => void;
 }) {
+  const t = useT();
   const [fxHint, setFxHint] = useState('');
   const amountRef = useRef<HTMLInputElement>(null);
   const currencyRef = useRef<HTMLSelectElement>(null);
@@ -51,7 +59,7 @@ function NewExpenseForm({
     }
     const converted = await convertAmount(amount, currency, group.currency);
     if (converted == null) { setFxHint(''); return; }
-    setFxHint(`≈ ${formatMoney(converted, group.currency)} en la moneda del grupo`);
+    setFxHint(t('newExpense.fxHint', { amount: formatMoney(converted, group.currency) }));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -62,12 +70,12 @@ function NewExpenseForm({
       form.querySelectorAll<HTMLInputElement>('input[name="split"]:checked'),
     ).map((c) => c.value);
     if (!splitBetween.length) {
-      alert('Seleccioná al menos un miembro');
+      alert(t('newExpense.selectMember'));
       return;
     }
     const amount = Number(fd.get('amount'));
     if (!Number.isFinite(amount) || amount <= 0) {
-      alert('El monto debe ser mayor a 0');
+      alert(t('newExpense.amountInvalid'));
       return;
     }
     const { ok, data } = await expensesApi.add(group._id, {
@@ -80,7 +88,7 @@ function NewExpenseForm({
     });
     if (!ok) {
       const d = data as { message?: string };
-      alert(d.message ?? 'No se pudo guardar el gasto');
+      alert(d.message ?? t('newExpense.saveFailed'));
       return;
     }
     onSuccess();
@@ -89,12 +97,17 @@ function NewExpenseForm({
   return (
     <form onSubmit={handleSubmit}>
       <div className="field">
-        <label>Descripción</label>
-        <input name="description" placeholder="ej: Cena" required autoFocus />
+        <label>{t('newExpense.description')}</label>
+        <input
+          name="description"
+          placeholder={t('newExpense.descriptionPlaceholder')}
+          required
+          autoFocus
+        />
       </div>
       <div className="field-row">
         <div className="field" style={{ flex: 2 }}>
-          <label>Monto</label>
+          <label>{t('newExpense.amount')}</label>
           <input
             ref={amountRef}
             name="amount"
@@ -108,7 +121,7 @@ function NewExpenseForm({
           />
         </div>
         <div className="field" style={{ flex: 1 }}>
-          <label>Moneda</label>
+          <label>{t('newExpense.currency')}</label>
           <select
             ref={currencyRef}
             name="currency"
@@ -117,7 +130,7 @@ function NewExpenseForm({
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
-                {c.code} — {c.label}
+                {c.code} — {t(`currencies.${c.code}`)}
               </option>
             ))}
           </select>
@@ -125,7 +138,7 @@ function NewExpenseForm({
       </div>
       {fxHint && <p className={styles.fxHint}>{fxHint}</p>}
       <div className="field">
-        <label>Pagado por</label>
+        <label>{t('newExpense.paidBy')}</label>
         <select name="paidBy" required>
           {group.members.map((m) => (
             <option key={m.memberId} value={m.memberId}>
@@ -135,17 +148,17 @@ function NewExpenseForm({
         </select>
       </div>
       <div className="field">
-        <label>Categoría</label>
+        <label>{t('newExpense.category')}</label>
         <select name="category">
-          {['Mercado', 'Comida', 'Transporte', 'Hospedaje', 'Servicios', 'Salud', 'Ocio', 'Otros'].map(
-            (cat) => (
-              <option key={cat}>{cat}</option>
-            ),
-          )}
+          {CATEGORY_KEYS.map((cat) => (
+            <option key={cat} value={cat}>
+              {t(`categories.${cat}`)}
+            </option>
+          ))}
         </select>
       </div>
       <div className="field">
-        <label>Dividido entre</label>
+        <label>{t('newExpense.splitBetween')}</label>
         <div className="split-list">
           {group.members.map((m) => (
             <label key={m.memberId} className="split-item">
@@ -162,7 +175,7 @@ function NewExpenseForm({
         </div>
       </div>
       <button type="submit" className="btn btn-primary btn-block">
-        Guardar gasto
+        {t('newExpense.save')}
       </button>
     </form>
   );
@@ -176,6 +189,7 @@ function AddMemberForm({
   groupId: string;
   onSuccess: () => void;
 }) {
+  const t = useT();
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -186,8 +200,13 @@ function AddMemberForm({
   return (
     <form onSubmit={handleSubmit}>
       <div className="field">
-        <label>Nombre</label>
-        <input name="name" placeholder="ej: Juan" required autoFocus />
+        <label>{t('addMember.name')}</label>
+        <input
+          name="name"
+          placeholder={t('addMember.namePlaceholder')}
+          required
+          autoFocus
+        />
       </div>
       <p
         className="field"
@@ -198,20 +217,20 @@ function AddMemberForm({
           display: 'block',
         }}
       >
-        No hace falta que tenga cuenta en la app.
+        {t('addMember.hint')}
       </p>
       <button type="submit" className="btn btn-primary btn-block">
-        Agregar
+        {t('addMember.submit')}
       </button>
     </form>
   );
 }
 
 /* ─── Invite Modal Content ─── */
-function InviteContent({ group }: { group: Group }) {
+function InviteContent({ group, t }: { group: Group; t: TFn }) {
   const link = `${location.origin}${location.pathname}#/join/${group.inviteToken}`;
   const waText = encodeURIComponent(
-    `Te invito a "${group.name}" en finfam: ${link}`,
+    t('invite.whatsappMessage', { group: group.name, link }),
   );
   const [copyMsg, setCopyMsg] = useState('');
 
@@ -223,17 +242,21 @@ function InviteContent({ group }: { group: Group }) {
       el?.select();
       document.execCommand('copy');
     }
-    setCopyMsg('✓ Link copiado');
+    setCopyMsg(t('invite.copied'));
   };
+
+  const infoTemplate = t('invite.info', { group: '%GROUP%' });
+  const [infoBefore, infoAfter = ''] = infoTemplate.split('%GROUP%');
 
   return (
     <>
       <p className={styles.inviteInfo}>
-        Comparte este enlace. Quien lo abra y se registre se une automáticamente
-        a <strong>{group.name}</strong>.
+        {infoBefore}
+        <strong>{group.name}</strong>
+        {infoAfter}
       </p>
       <div className="field">
-        <label>Link de invitación</label>
+        <label>{t('invite.linkLabel')}</label>
         <input
           id="inviteInput"
           value={link}
@@ -247,7 +270,7 @@ function InviteContent({ group }: { group: Group }) {
           style={{ flex: 1, minWidth: 140 }}
           onClick={handleCopy}
         >
-          Copiar enlace
+          {t('invite.copy')}
         </button>
         <a
           className="btn btn-ghost"
@@ -256,7 +279,7 @@ function InviteContent({ group }: { group: Group }) {
           rel="noopener noreferrer"
           style={{ flex: 1, minWidth: 140 }}
         >
-          WhatsApp
+          {t('invite.whatsapp')}
         </a>
       </div>
       {copyMsg && <p className={styles.copyMsg}>{copyMsg}</p>}
@@ -267,6 +290,7 @@ function InviteContent({ group }: { group: Group }) {
 /* ─── Main page ─── */
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const t = useT();
   const navigate = useNavigate();
   const [groupData, setGroupData] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -295,7 +319,7 @@ export default function GroupDetailPage() {
     const { ok, data } = await membersApi.remove(id, memberId);
     if (!ok) {
       const d = data as { message?: string };
-      alert(d.message ?? 'No se pudo quitar al miembro');
+      alert(d.message ?? t('memberChips.removeFailed'));
       return;
     }
     load();
@@ -303,20 +327,26 @@ export default function GroupDetailPage() {
 
   const handleDeleteGroup = async () => {
     if (!groupData) return;
-    if (!confirm(`¿Eliminar "${groupData.group.name}" y todos sus gastos?`)) return;
+    if (!confirm(t('groupDetail.confirmDelete', { name: groupData.group.name }))) return;
     await groupsApi.delete(groupData.group._id);
     navigate('/groups', { replace: true });
   };
 
-  if (loading) return <div className="empty">Cargando…</div>;
-  if (!groupData) return <div className="card empty">No se pudo cargar el grupo.</div>;
+  if (loading) return <div className="empty">{t('groupDetail.loading')}</div>;
+  if (!groupData) return <div className="card empty">{t('groupDetail.loadFailed')}</div>;
 
   const { group, expenses, balances, settlements, total } = groupData;
+
+  const tabLabels: Record<Tab, string> = {
+    expenses: t('groupDetail.tabExpenses'),
+    balances: t('groupDetail.tabBalances'),
+    settle: t('groupDetail.tabSettle'),
+  };
 
   return (
     <>
       <Link to="/groups" className={`btn-icon ${styles.backLink}`}>
-        ← Grupos
+        {t('groupDetail.back')}
       </Link>
 
       <div className="fade-up">
@@ -326,8 +356,13 @@ export default function GroupDetailPage() {
             <div className={styles.headerText}>
               <h1>{group.name}</h1>
               <div className={styles.meta}>
-                {formatMoney(total, group.currency)} en total ·{' '}
-                {plural(expenses.length, 'gasto', 'gastos')} · {group.currency}
+                {t('groupDetail.totalMeta', {
+                  total: formatMoney(total, group.currency),
+                })}
+                {' · '}
+                {t('groupDetail.expenses', { count: expenses.length })}
+                {' · '}
+                {group.currency}
               </div>
             </div>
           </div>
@@ -336,10 +371,10 @@ export default function GroupDetailPage() {
               className="btn-icon"
               onClick={() => setActiveModal('invite')}
             >
-              Invitar
+              {t('groupDetail.invite')}
             </button>
             <button className="btn-icon" onClick={handleDeleteGroup}>
-              Eliminar
+              {t('groupDetail.delete')}
             </button>
           </div>
         </div>
@@ -351,13 +386,13 @@ export default function GroupDetailPage() {
         />
 
         <div className="nav-tabs" style={{ marginTop: 24 }}>
-          {(['expenses', 'balances', 'settle'] as Tab[]).map((t) => (
+          {(['expenses', 'balances', 'settle'] as Tab[]).map((tabKey) => (
             <button
-              key={t}
-              className={`nav-tab${tab === t ? ' active' : ''}`}
-              onClick={() => setTab(t)}
+              key={tabKey}
+              className={`nav-tab${tab === tabKey ? ' active' : ''}`}
+              onClick={() => setTab(tabKey)}
             >
-              {t === 'expenses' ? 'Gastos' : t === 'balances' ? 'Balances' : 'Saldar'}
+              {tabLabels[tabKey]}
             </button>
           ))}
         </div>
@@ -380,14 +415,14 @@ export default function GroupDetailPage() {
 
       <button
         className="fab"
-        aria-label="Agregar gasto"
+        aria-label={t('groupDetail.fabAria')}
         onClick={() => setActiveModal('expense')}
       >
         +
       </button>
 
       {activeModal === 'expense' && (
-        <Modal title="Nuevo gasto" onClose={closeModal}>
+        <Modal title={t('newExpense.title')} onClose={closeModal}>
           <NewExpenseForm
             group={group}
             onSuccess={() => { closeModal(); load(); }}
@@ -396,7 +431,7 @@ export default function GroupDetailPage() {
       )}
 
       {activeModal === 'member' && (
-        <Modal title="Agregar miembro" onClose={closeModal}>
+        <Modal title={t('addMember.title')} onClose={closeModal}>
           <AddMemberForm
             groupId={group._id}
             onSuccess={() => { closeModal(); load(); }}
@@ -405,8 +440,8 @@ export default function GroupDetailPage() {
       )}
 
       {activeModal === 'invite' && (
-        <Modal title="Invitar al grupo" onClose={closeModal}>
-          <InviteContent group={group} />
+        <Modal title={t('invite.title')} onClose={closeModal}>
+          <InviteContent group={group} t={t} />
         </Modal>
       )}
     </>

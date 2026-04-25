@@ -1,28 +1,29 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { groupsApi, type GroupSummary } from '../api';
-import { CURRENCIES, formatMoney, plural } from '../utils';
+import { CURRENCIES, formatMoney } from '../utils';
+import { useT, type TFn } from '../i18n';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
 import cardStyles from '../components/GroupCard.module.css';
 
-function GroupCard({ g }: { g: GroupSummary }) {
+function GroupCard({ g, t }: { g: GroupSummary; t: TFn }) {
   const bal = Number(g.myBalance) || 0;
   let label: string, cls: string, amount: string;
   if (Math.abs(bal) < 0.01) {
-    label = 'Estás al día';
+    label = t('groupCard.upToDate');
     cls = 'neutral';
     amount = formatMoney(0, g.currency);
   } else if (bal > 0) {
-    label = 'Te deben';
+    label = t('groupCard.youAreOwed');
     cls = 'positive';
     amount = formatMoney(bal, g.currency);
   } else {
-    label = 'Debes';
+    label = t('groupCard.youOwe');
     cls = 'negative';
     amount = formatMoney(-bal, g.currency);
   }
-  const meta = `${plural(g.memberCount, 'miembro', 'miembros')} · ${plural(g.expenseCount, 'gasto', 'gastos')} · ${g.currency}`;
+  const meta = `${t('groupCard.members', { count: g.memberCount })} · ${t('groupCard.expenses', { count: g.expenseCount })} · ${g.currency}`;
 
   return (
     <Link to={`/groups/${g._id}`} className={cardStyles.card}>
@@ -40,6 +41,7 @@ function GroupCard({ g }: { g: GroupSummary }) {
 }
 
 function NewGroupForm({ onSuccess }: { onSuccess: (id: string) => void }) {
+  const t = useT();
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -56,32 +58,33 @@ function NewGroupForm({ onSuccess }: { onSuccess: (id: string) => void }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="field">
-        <label>Nombre del grupo</label>
+        <label>{t('groupsList.nameLabel')}</label>
         <input
           name="name"
-          placeholder="ej: Viaje a Cartagena"
+          placeholder={t('groupsList.namePlaceholder')}
           required
           autoFocus
         />
       </div>
       <div className="field">
-        <label>Moneda</label>
+        <label>{t('groupsList.currencyLabel')}</label>
         <select name="currency">
           {CURRENCIES.map((c) => (
             <option key={c.code} value={c.code}>
-              {c.code} — {c.label}
+              {c.code} — {t(`currencies.${c.code}`)}
             </option>
           ))}
         </select>
       </div>
       <button type="submit" className="btn btn-primary btn-block">
-        Crear grupo
+        {t('groupsList.submit')}
       </button>
     </form>
   );
 }
 
 export default function GroupsListPage() {
+  const t = useT();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -97,22 +100,32 @@ export default function GroupsListPage() {
   return (
     <>
       <div className="hero fade-up">
-        <h1>Tus grupos.</h1>
-        <p>Cada grupo es una cuenta compartida con tu familia, tu viaje o tus amigos.</p>
+        <h1>{t('groupsList.heroTitle')}</h1>
+        <p>{t('groupsList.heroSub')}</p>
       </div>
 
       <div className="fade-up">
         {loaded && groups.length === 0 ? (
           <div className="card empty">
             <span className="empty-icon">👥</span>
-            Aún no tienes grupos.
+            {t('groupsList.emptyLine1')}
             <br />
-            Pulsa <strong>+</strong> para crear el primero.
+            {(() => {
+              const text = t('groupsList.emptyLine2', { plus: '%PLUS%' });
+              const [before, after = ''] = text.split('%PLUS%');
+              return (
+                <>
+                  {before}
+                  <strong>+</strong>
+                  {after}
+                </>
+              );
+            })()}
           </div>
         ) : (
           <div className={cardStyles.list}>
             {groups.map((g) => (
-              <GroupCard key={g._id} g={g} />
+              <GroupCard key={g._id} g={g} t={t} />
             ))}
           </div>
         )}
@@ -120,14 +133,14 @@ export default function GroupsListPage() {
 
       <button
         className="fab"
-        aria-label="Nuevo grupo"
+        aria-label={t('groupsList.fabAria')}
         onClick={() => setShowModal(true)}
       >
         +
       </button>
 
       {showModal && (
-        <Modal title="Nuevo grupo" onClose={() => setShowModal(false)}>
+        <Modal title={t('groupsList.newGroupTitle')} onClose={() => setShowModal(false)}>
           <NewGroupForm
             onSuccess={(id) => {
               setShowModal(false);

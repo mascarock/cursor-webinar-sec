@@ -1,12 +1,23 @@
+/**
+ * Shared, locale-agnostic utilities.
+ *
+ * Money / date formatting and translatable labels live in `./i18n`.
+ * `formatMoney` and `formatDate` are re-exported here to keep existing
+ * import sites stable.
+ */
+export { formatMoney, formatDate } from './i18n';
+
+/** Currency codes available across the app. Display label is translated
+ *  via the `currencies.<code>` i18n key. */
 export const CURRENCIES = [
-  { code: 'COP', symbol: '$', label: 'Peso colombiano' },
-  { code: 'USD', symbol: 'US$', label: 'Dólar' },
-  { code: 'EUR', symbol: '€', label: 'Euro' },
-  { code: 'MXN', symbol: 'MX$', label: 'Peso mexicano' },
-  { code: 'ARS', symbol: 'AR$', label: 'Peso argentino' },
-  { code: 'BRL', symbol: 'R$', label: 'Real brasileño' },
-  { code: 'CLP', symbol: 'CL$', label: 'Peso chileno' },
-  { code: 'PEN', symbol: 'S/', label: 'Sol peruano' },
+  { code: 'COP', symbol: '$' },
+  { code: 'USD', symbol: 'US$' },
+  { code: 'EUR', symbol: '€' },
+  { code: 'MXN', symbol: 'MX$' },
+  { code: 'ARS', symbol: 'AR$' },
+  { code: 'BRL', symbol: 'R$' },
+  { code: 'CLP', symbol: 'CL$' },
+  { code: 'PEN', symbol: 'S/' },
 ] as const;
 
 export type CurrencyCode = (typeof CURRENCIES)[number]['code'];
@@ -36,34 +47,6 @@ export function initials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-}
-
-export function formatMoney(amount: number, currency = 'COP'): string {
-  const opts: Intl.NumberFormatOptions = {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: ['COP', 'CLP'].includes(currency) ? 0 : 2,
-  };
-  try {
-    return new Intl.NumberFormat('es-CO', opts).format(amount || 0);
-  } catch {
-    return `${currency} ${(amount || 0).toFixed(2)}`;
-  }
-}
-
-export function formatDate(d: string): string {
-  return new Date(d).toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-  });
-}
-
-export function plural(
-  count: number,
-  singular: string,
-  pluralForm: string,
-): string {
-  return `${count} ${count === 1 ? singular : pluralForm}`;
 }
 
 const FX_TTL_MS = 12 * 60 * 60 * 1000;

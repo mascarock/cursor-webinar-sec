@@ -1,5 +1,6 @@
 import { type Expense, type Member } from '../api';
 import { formatMoney, formatDate } from '../utils';
+import { useT, type TFn } from '../i18n';
 import Avatar from './Avatar';
 import styles from './ExpenseRow.module.css';
 
@@ -8,17 +9,21 @@ interface ExpenseRowProps {
   members: Member[];
   groupCurrency: string;
   onDelete: (id: string) => void;
+  t: TFn;
 }
 
-function ExpenseRow({ expense: e, members, groupCurrency, onDelete }: ExpenseRowProps) {
+function ExpenseRow({ expense: e, members, groupCurrency, onDelete, t }: ExpenseRowProps) {
   const payer = members.find((m) => m.memberId === e.paidBy);
-  const payerName = payer ? payer.name : 'Alguien';
+  const payerName = payer ? payer.name : t('expenses.somebody');
   const splitCount = e.splitBetween?.length ?? members.length;
   const splitLabel =
-    splitCount === 1 ? 'sin dividir' : `dividido entre ${splitCount}`;
+    splitCount === 1
+      ? t('expenses.notSplit')
+      : t('expenses.splitBetween', { count: splitCount });
   const expCurrency = e.currency || groupCurrency;
   const showConversion =
     expCurrency !== groupCurrency && typeof e.convertedAmount === 'number';
+  const categoryLabel = t(`categories.${e.category}`);
 
   return (
     <li className={styles.row}>
@@ -26,11 +31,18 @@ function ExpenseRow({ expense: e, members, groupCurrency, onDelete }: ExpenseRow
       <div className={styles.info}>
         <div className={styles.desc}>
           {e.description || (
-            <span style={{ color: 'var(--text-muted)' }}>(sin descripción)</span>
+            <span style={{ color: 'var(--text-muted)' }}>
+              {t('expenses.noDescription')}
+            </span>
           )}
         </div>
         <div className={styles.meta}>
-          {payerName} pagó · {e.category} · {splitLabel} · {formatDate(e.date)}
+          {t('expenses.paidByMeta', {
+            payer: payerName,
+            category: categoryLabel,
+            split: splitLabel,
+            date: formatDate(e.date),
+          })}
         </div>
       </div>
       <div className={styles.amountWrap}>
@@ -43,7 +55,7 @@ function ExpenseRow({ expense: e, members, groupCurrency, onDelete }: ExpenseRow
       </div>
       <button
         className={styles.deleteBtn}
-        aria-label="Eliminar"
+        aria-label={t('expenses.deleteAria')}
         onClick={() => onDelete(e._id)}
       >
         ×
@@ -65,17 +77,22 @@ export default function ExpenseList({
   groupCurrency,
   onDelete,
 }: ExpenseListProps) {
+  const t = useT();
   if (!expenses.length) {
+    const text = t('expenses.empty', { plus: '%PLUS%' });
+    const [before, after = ''] = text.split('%PLUS%');
     return (
       <div className="card empty">
         <span className="empty-icon">🧾</span>
-        Aún no hay gastos. Pulsa <strong>+</strong> para agregar uno.
+        {before}
+        <strong>+</strong>
+        {after}
       </div>
     );
   }
   return (
     <div className="card">
-      <p className="section-label">Historial</p>
+      <p className="section-label">{t('expenses.historyLabel')}</p>
       <ul className={styles.feed}>
         {expenses.map((e) => (
           <ExpenseRow
@@ -84,6 +101,7 @@ export default function ExpenseList({
             members={members}
             groupCurrency={groupCurrency}
             onDelete={onDelete}
+            t={t}
           />
         ))}
       </ul>

@@ -19,7 +19,7 @@ import { getUserFromRequest } from '../auth/jwt.util';
 function requireAuth(req: Request) {
   const user = getUserFromRequest(req);
   if (!user) {
-    throw new HttpException('No autenticado', HttpStatus.UNAUTHORIZED);
+    throw new HttpException('Not authenticated', HttpStatus.UNAUTHORIZED);
   }
   return user;
 }
@@ -81,7 +81,7 @@ export class GroupsController {
     const user = requireAuth(req);
     const group = await this.groups.joinByToken(token, user.username);
     if (!group) {
-      throw new HttpException('Invitación inválida', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid invitation', HttpStatus.NOT_FOUND);
     }
     return { ok: true, groupId: group._id };
   }
@@ -90,7 +90,7 @@ export class GroupsController {
   async detail(@Req() req: Request, @Param('id') id: string) {
     requireAuth(req);
     const group = await this.groups.findById(id);
-    if (!group) throw new HttpException('Grupo no encontrado', HttpStatus.NOT_FOUND);
+    if (!group) throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
     const expenses = await this.expenses.list(id);
 
     const converted = await this.fx.convertMany(
@@ -136,7 +136,7 @@ export class GroupsController {
   async addMember(@Req() req: Request, @Param('id') id: string, @Body() body: { name: string }) {
     requireAuth(req);
     if (!body?.name?.trim()) {
-      throw new HttpException('Nombre requerido', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Name is required', HttpStatus.BAD_REQUEST);
     }
     return this.groups.addMember(id, body.name);
   }
@@ -149,12 +149,12 @@ export class GroupsController {
   ) {
     requireAuth(req);
     const group = await this.groups.findById(id);
-    if (!group) throw new HttpException('Grupo no encontrado', HttpStatus.NOT_FOUND);
+    if (!group) throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
     const member = group.members.find((m) => m.memberId === memberId);
-    if (!member) throw new HttpException('Miembro no encontrado', HttpStatus.NOT_FOUND);
+    if (!member) throw new HttpException('Member not found', HttpStatus.NOT_FOUND);
     if (group.members.length <= 1) {
       throw new HttpException(
-        'No se puede quitar el último miembro del grupo',
+        "Can't remove the last member of the group",
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -164,7 +164,7 @@ export class GroupsController {
     );
     if (hasExpenses) {
       throw new HttpException(
-        `No se puede quitar a ${member.name}: tiene gastos asociados. Eliminá primero esos gastos.`,
+        `Can't remove ${member.name}: they have associated expenses. Delete those expenses first.`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -181,17 +181,17 @@ export class GroupsController {
   async createExpense(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
     requireAuth(req);
     const group = await this.groups.findById(id);
-    if (!group) throw new HttpException('Grupo no encontrado', HttpStatus.NOT_FOUND);
+    if (!group) throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
     if (!body?.splitBetween?.length) {
       body.splitBetween = group.members.map((m) => m.memberId);
     }
     const validIds = new Set(group.members.map((m) => m.memberId));
     if (!validIds.has(String(body.paidBy))) {
-      throw new HttpException('Pagador inválido', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Invalid payer', HttpStatus.BAD_REQUEST);
     }
     body.splitBetween = body.splitBetween.map(String).filter((id: string) => validIds.has(id));
     if (!body.splitBetween.length) {
-      throw new HttpException('Seleccioná al menos un miembro válido', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Select at least one valid member', HttpStatus.BAD_REQUEST);
     }
     try {
       const created = await this.expenses.create(id, body, group.currency);

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useT } from '../i18n';
 import { groupsApi } from '../api';
 import AuthPage from './AuthPage';
 
@@ -9,6 +10,7 @@ const PENDING_JOIN_KEY = 'pendingJoinToken';
 export default function JoinPage() {
   const { token } = useParams<{ token: string }>();
   const { currentUser, loading } = useAuth();
+  const t = useT();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,5 +37,5 @@ export default function JoinPage() {
     return <AuthPage viaInvite />;
   }
 
-  return <div className="empty">Uniéndote al grupo...</div>;
+  return <div className="empty">{t('join.joining')}</div>;
 }

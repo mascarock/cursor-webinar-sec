@@ -1,5 +1,6 @@
 import { type Member } from '../api';
 import { colorFor, initials } from '../utils';
+import { useT } from '../i18n';
 import styles from './MemberChip.module.css';
 
 interface MemberChipsProps {
@@ -13,6 +14,7 @@ export default function MemberChips({
   onRemove,
   onAdd,
 }: MemberChipsProps) {
+  const t = useT();
   return (
     <div className={styles.chips}>
       {members.map((m) => (
@@ -27,9 +29,9 @@ export default function MemberChips({
           {!m.isUser && (
             <button
               className={styles.removeX}
-              title="Quitar"
+              title={t('memberChips.removeTitle')}
               onClick={() => {
-                if (confirm('¿Quitar a este miembro?')) onRemove(m.memberId);
+                if (confirm(t('memberChips.confirmRemove'))) onRemove(m.memberId);
               }}
             >
               ×
@@ -38,7 +40,7 @@ export default function MemberChips({
         </span>
       ))}
       <button className={styles.addBtn} onClick={onAdd}>
-        + Agregar miembro
+        {t('memberChips.addBtn')}
       </button>
     </div>
   );
